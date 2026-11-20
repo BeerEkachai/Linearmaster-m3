@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinearMaster M.3 - เครื่องมือสำรวจกราฟและระบบสมการ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --primary-light: #3b82f6;
+            --accent: #f59e0b;
+            --bg: #f1f5f9;
+            --card: #ffffff;
+            --text: #1e293b;
+            --border: #cbd5e1;
+        }
+        * { box-sizing: border-box; font-family: 'Prompt', sans-serif; margin: 0; padding: 0; }
+        body { background-color: var(--bg); color: var(--text); padding-bottom: 40px; }
+        
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--primary), #1d4ed8);
+            color: white;
+            padding: 20px 15px;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+        header h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 5px; }
+        header p { font-size: 0.95rem; opacity: 0.9; margin-bottom: 8px; }
+        .credit-badge {
+            display: inline-block;
+            background: rgba(245, 158, 11, 0.2);
+            border: 1px solid var(--accent);
+            color: #fde68a;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 15px;
+            background: white;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .tab-btn {
+            padding: 10px 20px;
+            border: 2px solid var(--primary-light);
+            background: white;
+            color: var(--primary);
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+        }
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* Container */
+        .container { max-width: 1000px; margin: 20px auto; padding: 0 15px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Grid Layout for Solver */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
+
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border: 1px solid #e2e8f0;
+        }
+        .card h2 {
+            font-size: 1.15rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 8px;
+        }
+
+        /* Equation Inputs */
+        .eq-box {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 4px solid #2563eb;
+        }
+        .eq-box.eq2 { border-left-color: #dc2626; }
+        .eq-label { font-weight: 600; font-size: 0.9rem; margin-bottom: 8px; display: block; }
+        .eq-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        input[type="number"] {
+            width: 70px;
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            text-align: center;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        .btn-solve {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+        .btn-solve:hover { background: #1e40af; }
+
+        /* Canvas */
+        canvas {
+            width: 100%;
+            height: 350px;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            display: block;
+        }
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 10px;
+            font-size: 0.85rem;
+        }
+        .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+
+        /* Method Toggle */
+        .method-tabs { display: flex; gap: 8px; margin-bottom: 15px; }
+        .m-btn {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid var(--border);
+            background: #f8fafc;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .m-btn.active { background: #dbeafe; border-color: #2563eb; color: #1e3a8a; }
+
+        .result-box {
+            background: #f0fdf4;
+            border: 1px solid #86efac;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-weight: 600;
+            color: #166534;
+            text-align: center;
+        }
+        .steps-container {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 0.92rem;
+            line-height: 1.7;
+            white-space: pre-line;
+        }
+
+        /* Song Section */
+        .song-card {
+            max-width: 750px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            border-top: 5px solid var(--accent);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .verse {
+            background: #fffbeb;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--accent);
+            line-height: 1.8;
+        }
+        .verse-title { font-weight: 700; color: #b45309; margin-bottom: 5px; display: block; }
+
+        footer { text-align: center; margin-top: 30px; font-size: 0.85rem; color: #64748b; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>LinearMaster M.3</h1>
+    <p>เครื่องมือสำรวจกราฟและตรวจสอบระบบสมการเชิงเส้นสองตัวแปร</p>
+    <div class="credit-badge">ออกแบบและพัฒนาโดย นายเอกชัย สะอาดแก้ว</div>
+</header>
+
+<div class="nav-tabs">
+    <button class="tab-btn active" onclick="switchTab('solver', this)">?? เครื่องมือสำรวจกราฟ & วิธีทำ</button>
+    <button class="tab-btn" onclick="switchTab('song', this)">?? เพลงคณิตศาสตร์ประกอบการสอน</button>
+</div>
+
+<div class="container">
+    <!-- TAB 1: SOLVER & GRAPH -->
+    <div id="solver" class="tab-content active">
+        <div class="grid-2">
+            <!-- Left: Inputs & Graph -->
+            <div class="card">
+                <h2>1. ป้อนสัมประสิทธิ์ของระบบสมการ</h2>
+                <div class="eq-box">
+                    <span class="eq-label" style="color:#2563eb;">สมการที่ 1 (เส้นสีน้ำเงิน) : a?x + b?y = c?</span>
+                    <div class="eq-row">
+                        <input type="number" id="a1" value="2" step="any"> <span>x +</span>
+                        <input type="number" id="b1" value="1" step="any"> <span>y =</span>
+                        <input type="number" id="c1" value="10" step="any">
+                    </div>
+                </div>
+                <div class="eq-box eq2">
+                    <span class="eq-label" style="color:#dc2626;">สมการที่ 2 (เส้นสีแดง) : a?x + b?y = c?</span>
+                    <div class="eq-row">
+                        <input type="number" id="a2" value="1" step="any"> <span>x +</span>
+                        <input type="number" id="b2" value="-1" step="any"> <span>y =</span>
+                        <input type="number" id="c2" value="2" step="any">
+                    </div>
+                </div>
+                <button class="btn-solve" onclick="calculateAll()">วาดกราฟและตรวจสอบคำตอบ</button>
+
+                <h2 style="margin-top:20px;">2. กราฟแสดงความสัมพันธ์ของสมการ</h2>
+                <canvas id="graphCanvas" width="450" height="350"></canvas>
+                <div class="legend">
+                    <span><i class="dot" style="background:#2563eb;"></i>สมการที่ 1</span>
+                    <span><i class="dot" style="background:#dc2626;"></i>สมการที่ 2</span>
+                    <span><i class="dot" style="background:#16a34a;"></i>จุดตัดคำตอบ (x, y)</span>
+                </div>
+            </div>
+
+            <!-- Right: Step by Step -->
+            <div class="card">
+                <h2>3. ตรวจสอบคำตอบและขั้นตอนวิธีทำ</h2>
+                <div id="summaryResult" class="result-box">คำตอบของระบบสมการคือ (4, 2)</div>
+                
+                <div class="method-tabs">
+                    <button class="m-btn active" id="btnElim" onclick="setMethod('elim')">วิธีที่ 1: การกำจัดตัวแปร</button>
+                    <button class="m-btn" id="btnSub" onclick="setMethod('sub')">วิธีที่ 2: การแทนค่า</button>
+                </div>
+
+                <div id="stepsOutput" class="steps-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 2: MATH SONG -->
+    <div id="song" class="tab-content">
+        <div class="song-card">
+            <h2 style="color:var(--primary); margin-bottom:5px;">?? เพลง: พิชิตสมการสองตัวแปร</h2>
+            <p style="color:#64748b; font-size:0.9rem; margin-bottom:20px;">คำร้อง/ทำนอง: นายเอกชัย สะอาดแก้ว (จังหวะกีตาร์โปร่ง 4/4)</p>
+
+            <div class="verse">
+                <span class="verse-title">ท่อนที่ 1 : เริ่มต้นจากโจทย์ปัญหา</span>
+                ต้องอ่านโจทย์ที่เขาให้มา... กำหนดตัวแปร x, y แทนไป<br>
+                สร้างสมการขึ้นมาใหม่... เป็นไปตามเงื่อนไข ทั้งสองสมการ
+            </div>
+
+            <div class="verse">
+                <span class="verse-title">ท่อนที่ 2 : ทางเลือก 2 วิธี</span>
+                แล้วก็แก้... แก้ระบบสมการ...<br>
+                โดยกำจัดตัวแปร หรือการแทนค่าไป
+            </div>
+
+            <div class="verse">
+                <span class="verse-title">ท่อนที่ 3 : วิธีกำจัดตัวแปร</span>
+                กำจัดตัวแปร ทำสัมประสิทธิ์... หน้า x หรือ y ให้เท่ากัน หรือตรงข้ามกันไว้<br>
+                <strong>เครื่องหมายเหมือนกัน จับมาลบ... เครื่องหมายต่างกัน จับมาบวกกันไป</strong><br>
+                ตัวแปรหายไป... แล้วหาอีกตัว!
+            </div>
+
+            <div class="verse">
+                <span class="verse-title">ท่อนที่ 4 : วิธีการแทนค่า</span>
+                ส่วนการแทนค่า เลือกสมการง่ายๆ... จัดรูป x หรือ y ให้อยู่ตัวเดียวไว้<br>
+                เอาไปแทนค่า ในอีกสมการทันใด... แก้สมการได้ แล้วหาอีกตัว!
+            </div>
+
+            <div class="verse" style="background:#eff6ff; border-left-color:#2563eb;">
+                <span class="verse-title" style="color:#1e3a8a;">ท่อนที่ 5 : สรุปและตรวจคำตอบด้วย Web App</span>
+                ได้ค่า x และ y เป็นคู่อันดับคำตอบ... เปิดเว็บแอปฯ ตรวจสอบ ดูจุดตัดของกราฟสองเส้น<br>
+                ถ้าตัดกันหนึ่งจุด นั่นแหละคือคำตอบที่ชัดเจน... คณิตศาสตร์ไม่ยากเย็น เก่งขึ้นได้ด้วยมือเรา!
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer>
+    ? 2026 LinearMaster M.3 | ออกแบบและพัฒนาโดย นายเอกชัย สะอาดแก้ว
+</footer>
+
+<script>
+    let currentMethod = 'elim';
+
+    function switchTab(tabId, btn) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        btn.classList.add('active');
+    }
+
+    function setMethod(method) {
+        currentMethod = method;
+        document.getElementById('btnElim').classList.toggle('active', method === 'elim');
+        document.getElementById('btnSub').classList.toggle('active', method === 'sub');
+        calculateAll();
+    }
+
+    function fmtNum(n) {
+        return Number.isInteger(n) ? n : parseFloat(n.toFixed(2));
+    }
+
+    function formatEq(a, b, c) {
+        let sign = b >= 0 ? '+' : '-';
+        return `${fmtNum(a)}x ${sign} ${fmtNum(Math.abs(b))}y = ${fmtNum(c)}`;
+    }
+
+    function calculateAll() {
+        const a1 = parseFloat(document.getElementById('a1').value) || 0;
+        const b1 = parseFloat(document.getElementById('b1').value) || 0;
+        const c1 = parseFloat(document.getElementById('c1').value) || 0;
+        const a2 = parseFloat(document.getElementById('a2').value) || 0;
+        const b2 = parseFloat(document.getElementById('b2').value) || 0;
+        const c2 = parseFloat(document.getElementById('c2').value) || 0;
+
+        const det = a1 * b2 - a2 * b1;
+        const summaryEl = document.getElementById('summaryResult');
+        const stepsEl = document.getElementById('stepsOutput');
+
+        if ((a1 === 0 && b1 === 0) || (a2 === 0 && b2 === 0)) {
+            summaryEl.innerHTML = "กรุณากรอกสัมประสิทธิ์หน้า x หรือ y อย่างน้อย 1 ตัวที่ไม่ใช่ 0";
+            summaryEl.style.background = "#fef2f2";
+            summaryEl.style.color = "#991b1b";
+            stepsEl.textContent = "สมการไม่สมบูรณ์";
+            return;
+        }
+
+        if (Math.abs(det) < 1e-9) {
+            // Parallel or Coincident
+            const checkRatio = (a1 !== 0) ? (c1 / a1 - c2 / a2) : (c1 / b1 - c2 / b2);
+            if (Math.abs(checkRatio) < 1e-9) {
+                summaryEl.innerHTML = "กราฟทับกันสนิท : มีคำตอบมากมายนับไม่ถ้วน";
+                summaryEl.style.background = "#fefce8";
+                summaryEl.style.color = "#854d0e";
+                stepsEl.textContent = `สมการที่ (1): ${formatEq(a1, b1, c1)}\nสมการที่ (2): ${formatEq(a2, b2, c2)}\n\nเมื่อจัดรูปแล้วพบว่าทั้งสองสมการเป็นสมการเดียวกัน กราฟเส้นตรงจึงทับกันสนิท ทำให้มีคำตอบมากมายนับไม่ถ้วน`;
+            } else {
+                summaryEl.innerHTML = "กราฟขนานกัน : ไม่มีคำตอบของระบบสมการ";
+                summaryEl.style.background = "#fef2f2";
+                summaryEl.style.color = "#991b1b";
+                stepsEl.textContent = `สมการที่ (1): ${formatEq(a1, b1, c1)}\nสมการที่ (2): ${formatEq(a2, b2, c2)}\n\nความชันของเส้นตรงทั้งสองเท่ากันแต่จุดตัดแกนต่างกัน กราฟจึงขนานกันและไม่ตัดกัน ทำให้ระบบสมการนี้ไม่มีคำตอบ`;
+            }
+            drawGraph(a1, b1, c1, a2, b2, c2, null, null);
+            return;
+        }
+
+        const x = (c1 * b2 - c2 * b1) / det;
+        const y = (a1 * c2 - a2 * c1) / det;
+
+        summaryEl.innerHTML = `กราฟตัดกัน 1 จุด : คำตอบคือ (${fmtNum(x)}, ${fmtNum(y)})`;
+        summaryEl.style.background = "#f0fdf4";
+        summaryEl.style.color = "#166534";
+
+        if (currentMethod === 'elim') {
+            stepsEl.textContent = 
+`กำหนดให้:
+  ${formatEq(a1, b1, c1)}   --- (1)
+  ${formatEq(a2, b2, c2)}   --- (2)
+
+ขั้นที่ 1: กำจัดตัวแปร y โดยทำให้สัมประสิทธิ์หน้า y เท่ากัน
+  นำ (${fmtNum(b2)}) คูณสมการ (1): ${formatEq(a1*b2, b1*b2, c1*b2)}   --- (3)
+  นำ (${fmtNum(b1)}) คูณสมการ (2): ${formatEq(a2*b1, b2*b1, c2*b1)}   --- (4)
+
+ขั้นที่ 2: นำสมการ (3) ลบด้วยสมการ (4) เพื่อกำจัดตัวแปร y
+  (${fmtNum(a1*b2)} - ${fmtNum(a2*b1)})x = ${fmtNum(c1*b2)} - ${fmtNum(c2*b1)}
+  ${fmtNum(det)}x = ${fmtNum(c1*b2 - c2*b1)}
+  x = ${fmtNum(x)}
+
+ขั้นที่ 3: นำค่า x = ${fmtNum(x)} ไปแทนในสมการเพื่อหาค่า y
+  จะได้ y = ${fmtNum(y)}
+
+ดังนั้น คำตอบของระบบสมการคือ (${fmtNum(x)}, ${fmtNum(y)})`;
+        } else {
+            let subText = `กำหนดให้:\n  ${formatEq(a1, b1, c1)}   --- (1)\n  ${formatEq(a2, b2, c2)}   --- (2)\n\n`;
+            if (b1 !== 0) {
+                subText += `ขั้นที่ 1: จัดรูปสมการ (1) ให้อยู่ในรูป y เทอมของ x\n  ${fmtNum(b1)}y = ${fmtNum(c1)} - (${fmtNum(a1)}x)\n  y = (${fmtNum(c1)} - ${fmtNum(a1)}x) / ${fmtNum(b1)}   --- (3)\n\n`;
+                subText += `ขั้นที่ 2: นำ y จากสมการ (3) ไปแทนค่าในสมการ (2)\n  ${fmtNum(a2)}x + ${fmtNum(b2)}[(${fmtNum(c1)} - ${fmtNum(a1)}x) / ${fmtNum(b1)}] = ${fmtNum(c2)}\n  แก้สมการหาค่า x จะได้ x = ${fmtNum(x)}\n\n`;
+                subText += `ขั้นที่ 3: นำ x = ${fmtNum(x)} แทนกลับในสมการ (3)\n  y = (${fmtNum(c1)} - ${fmtNum(a1)}(${fmtNum(x)})) / ${fmtNum(b1)}\n  y = ${fmtNum(y)}\n\nดังนั้น คำตอบของระบบสมการคือ (${fmtNum(x)}, ${fmtNum(y)})`;
+            } else {
+                subText += `ขั้นที่ 1: จากสมการ (1) หาค่า x ได้โดยตรง\n  x = ${fmtNum(c1)} / ${fmtNum(a1)} = ${fmtNum(x)}\n\nขั้นที่ 2: นำ x = ${fmtNum(x)} ไปแทนค่าในสมการ (2)\n  ${fmtNum(a2)}(${fmtNum(x)}) + ${fmtNum(b2)}y = ${fmtNum(c2)}\n  y = ${fmtNum(y)}\n\nดังนั้น คำตอบของระบบสมการคือ (${fmtNum(x)}, ${fmtNum(y)})`;
+            }
+            stepsEl.textContent = subText;
+        }
+
+        drawGraph(a1, b1, c1, a2, b2, c2, x, y);
+    }
+
+    function drawGraph(a1, b1, c1, a2, b2, c2, ix, iy) {
+        const canvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+        const w = canvas.width;
+        const h = canvas.height;
+        ctx.clearRect(0, 0, w, h);
+
+        // Auto scale centered around intersection or origin
+        let cx = (ix !== null && isFinite(ix)) ? ix : 0;
+        let cy = (iy !== null && isFinite(iy)) ? iy : 0;
+        let range = Math.max(10, Math.abs(cx) * 1.8, Math.abs(cy) * 1.8);
+        range = Math.ceil(range / 5) * 5;
+
+        const scaleX = w / (2 * range);
+        const scaleY = h / (2 * range);
+        const originX = w / 2 - cx * scaleX;
+        const originY = h / 2 + cy * scaleY;
+
+        // Grid
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.lineWidth = 1;
+        let step = range <= 10 ? 1 : Math.ceil(range / 10);
+        for (let gx = Math.floor(cx - range); gx <= Math.ceil(cx + range); gx += step) {
+            let px = originX + gx * scaleX;
+            ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, h); ctx.stroke();
+        }
+        for (let gy = Math.floor(cy - range); gy <= Math.ceil(cy + range); gy += step) {
+            let py = originY - gy * scaleY;
+            ctx.beginPath(); ctx.moveTo(0, py); ctx.lineTo(w, py); ctx.stroke();
+        }
+
+        // Axes
+        ctx.strokeStyle = '#64748b';
+        ctx.lineWidth = 2;
+        if (originY >= 0 && originY <= h) {
+            ctx.beginPath(); ctx.moveTo(0, originY); ctx.lineTo(w, originY); ctx.stroke();
+        }
+        if (originX >= 0 && originX <= w) {
+            ctx.beginPath(); ctx.moveTo(originX, 0); ctx.lineTo(originX, h); ctx.stroke();
+        }
+
+        // Plot Line Helper
+        function plotLine(a, b, c, color) {
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            if (Math.abs(b) > 1e-9) {
+                let xStart = cx - range * 1.5;
+                let xEnd = cx + range * 1.5;
+                let yStart = (c - a * xStart) / b;
+                let yEnd = (c - a * xEnd) / b;
+                ctx.moveTo(originX + xStart * scaleX, originY - yStart * scaleY);
+                ctx.lineTo(originX + xEnd * scaleX, originY - yEnd * scaleY);
+            } else if (Math.abs(a) > 1e-9) {
+                let xVal = c / a;
+                let px = originX + xVal * scaleX;
+                ctx.moveTo(px, 0); ctx.lineTo(px, h);
+            }
+            ctx.stroke();
+        }
+
+        plotLine(a1, b1, c1, '#2563eb');
+        plotLine(a2, b2, c2, '#dc2626');
+
+        // Intersection Point
+        if (ix !== null && iy !== null && isFinite(ix) && isFinite(iy)) {
+            let px = originX + ix * scaleX;
+            let py = originY - iy * scaleY;
+            ctx.fillStyle = '#16a34a';
+            ctx.beginPath();
+            ctx.arc(px, py, 6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            ctx.fillStyle = '#0f172a';
+            ctx.font = 'bold 13px Prompt';
+            ctx.fillText(`(${fmtNum(ix)}, ${fmtNum(iy)})`, px + 10, py - 10);
+        }
+    }
+
+    // Initial run
+    window.onload = calculateAll;
+</script>
+</body>
+</html>
