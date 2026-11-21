@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LinearMaster M.3 - เครื่องมือสำรวจกราฟและระบบสมการ</title>
+    <title>LinearMaster M.3 - ห้องทดลองสำรวจระบบสมการ</title>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #1e3a8a;
             --primary-light: #3b82f6;
             --accent: #f59e0b;
+            --success: #16a34a;
+            --danger: #dc2626;
             --bg: #f1f5f9;
             --card: #ffffff;
             --text: #1e293b;
@@ -69,17 +71,17 @@
         }
 
         /* Container */
-        .container { max-width: 1000px; margin: 20px auto; padding: 0 15px; }
+        .container { max-width: 1050px; margin: 20px auto; padding: 0 15px; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        /* Grid Layout for Solver */
+        /* Grid Layout */
         .grid-2 {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
         }
-        @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
+        @media (max-width: 820px) { .grid-2 { grid-template-columns: 1fr; } }
 
         .card {
             background: var(--card);
@@ -99,13 +101,13 @@
         /* Equation Inputs */
         .eq-box {
             background: #f8fafc;
-            padding: 15px;
+            padding: 12px 15px;
             border-radius: 8px;
             margin-bottom: 12px;
             border-left: 4px solid #2563eb;
         }
         .eq-box.eq2 { border-left-color: #dc2626; }
-        .eq-label { font-weight: 600; font-size: 0.9rem; margin-bottom: 8px; display: block; }
+        .eq-label { font-weight: 600; font-size: 0.9rem; margin-bottom: 6px; display: block; }
         .eq-row {
             display: flex;
             align-items: center;
@@ -113,32 +115,68 @@
             flex-wrap: wrap;
         }
         input[type="number"] {
-            width: 70px;
-            padding: 8px;
+            width: 72px;
+            padding: 7px;
             border: 1px solid var(--border);
             border-radius: 6px;
             text-align: center;
             font-size: 1rem;
             font-weight: 600;
         }
-        .btn-solve {
+        .btn-primary {
             width: 100%;
-            padding: 12px;
+            padding: 11px;
             background: var(--primary);
             color: white;
             border: none;
             border-radius: 8px;
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 600;
             cursor: pointer;
             margin-top: 5px;
         }
-        .btn-solve:hover { background: #1e40af; }
+        .btn-primary:hover { background: #1e40af; }
+
+        /* Hypothesis Box */
+        .hypothesis-box {
+            background: #fffbeb;
+            border: 2px dashed var(--accent);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        .hypothesis-title {
+            font-weight: 700;
+            color: #b45309;
+            margin-bottom: 10px;
+            display: block;
+            font-size: 1rem;
+        }
+        .btn-test {
+            background: var(--accent);
+            color: #1e293b;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .btn-test:hover { background: #d97706; color: white; }
+        
+        .test-feedback {
+            margin-top: 12px;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            display: none;
+        }
 
         /* Canvas */
         canvas {
             width: 100%;
-            height: 350px;
+            height: 330px;
             background: #ffffff;
             border: 1px solid var(--border);
             border-radius: 8px;
@@ -147,14 +185,30 @@
         .legend {
             display: flex;
             justify-content: center;
-            gap: 20px;
+            gap: 15px;
             margin-top: 10px;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
+            flex-wrap: wrap;
         }
-        .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        .dot { width: 11px; height: 11px; border-radius: 50%; display: inline-block; margin-right: 4px; }
 
-        /* Method Toggle */
-        .method-tabs { display: flex; gap: 8px; margin-bottom: 15px; }
+        /* Reveal Solution Section */
+        .btn-reveal {
+            width: 100%;
+            padding: 12px;
+            background: #0f172a;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+        }
+        .btn-reveal:hover { background: #334155; }
+
+        .solution-panel { display: none; }
+        .method-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
         .m-btn {
             flex: 1;
             padding: 8px;
@@ -163,7 +217,7 @@
             border-radius: 6px;
             cursor: pointer;
             font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 0.88rem;
         }
         .m-btn.active { background: #dbeafe; border-color: #2563eb; color: #1e3a8a; }
 
@@ -172,7 +226,7 @@
             border: 1px solid #86efac;
             padding: 12px;
             border-radius: 8px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             font-weight: 600;
             color: #166534;
             text-align: center;
@@ -181,9 +235,10 @@
             background: #f8fafc;
             padding: 15px;
             border-radius: 8px;
-            font-size: 0.92rem;
+            font-size: 0.9rem;
             line-height: 1.7;
             white-space: pre-line;
+            border: 1px solid #e2e8f0;
         }
 
         /* Song Section */
@@ -213,60 +268,76 @@
 
 <header>
     <h1>LinearMaster M.3</h1>
-    <p>เครื่องมือสำรวจกราฟและตรวจสอบระบบสมการเชิงเส้นสองตัวแปร</p>
+    <p>ห้องทดลองสำรวจกราฟและค้นพบคำตอบของระบบสมการเชิงเส้นสองตัวแปร</p>
     <div class="credit-badge">ออกแบบและพัฒนาโดย นายเอกชัย สะอาดแก้ว</div>
 </header>
 
 <div class="nav-tabs">
-    <button class="tab-btn active" onclick="switchTab('solver', this)">📊 เครื่องมือสำรวจกราฟ & วิธีทำ</button>
+    <button class="tab-btn active" onclick="switchTab('solver', this)">🔬 ห้องทดลองสำรวจกราฟ & ทดสอบสมมติฐาน</button>
     <button class="tab-btn" onclick="switchTab('song', this)">🎸 เพลงคณิตศาสตร์ประกอบการสอน</button>
 </div>
 
 <div class="container">
-    <!-- TAB 1: SOLVER & GRAPH -->
+    <!-- TAB 1: DISCOVERY LAB -->
     <div id="solver" class="tab-content active">
         <div class="grid-2">
             <!-- Left: Inputs & Graph -->
             <div class="card">
-                <h2>1. ป้อนสัมประสิทธิ์ของระบบสมการ</h2>
+                <h2>ขั้นที่ 1 : สร้างแบบจำลองระบบสมการ</h2>
                 <div class="eq-box">
                     <span class="eq-label" style="color:#2563eb;">สมการที่ 1 (เส้นสีน้ำเงิน) : a₁x + b₁y = c₁</span>
                     <div class="eq-row">
-                        <input type="number" id="a1" value="2" step="any"> <span>x +</span>
-                        <input type="number" id="b1" value="1" step="any"> <span>y =</span>
-                        <input type="number" id="c1" value="10" step="any">
+                        <input type="number" id="a1" value="2" step="any" onchange="resetDiscovery()"> <span>x +</span>
+                        <input type="number" id="b1" value="1" step="any" onchange="resetDiscovery()"> <span>y =</span>
+                        <input type="number" id="c1" value="10" step="any" onchange="resetDiscovery()">
                     </div>
                 </div>
                 <div class="eq-box eq2">
                     <span class="eq-label" style="color:#dc2626;">สมการที่ 2 (เส้นสีแดง) : a₂x + b₂y = c₂</span>
                     <div class="eq-row">
-                        <input type="number" id="a2" value="1" step="any"> <span>x +</span>
-                        <input type="number" id="b2" value="-1" step="any"> <span>y =</span>
-                        <input type="number" id="c2" value="2" step="any">
+                        <input type="number" id="a2" value="1" step="any" onchange="resetDiscovery()"> <span>x +</span>
+                        <input type="number" id="b2" value="-1" step="any" onchange="resetDiscovery()"> <span>y =</span>
+                        <input type="number" id="c2" value="2" step="any" onchange="resetDiscovery()">
                     </div>
                 </div>
-                <button class="btn-solve" onclick="calculateAll()">วาดกราฟและตรวจสอบคำตอบ</button>
+                <button class="btn-primary" onclick="plotLinesOnly()">1. แสดงกราฟของทั้งสองสมการ</button>
 
-                <h2 style="margin-top:20px;">2. กราฟแสดงความสัมพันธ์ของสมการ</h2>
-                <canvas id="graphCanvas" width="450" height="350"></canvas>
+                <h2 style="margin-top:20px;">กราฟแสดงความสัมพันธ์ของสมการ</h2>
+                <canvas id="graphCanvas" width="460" height="330"></canvas>
                 <div class="legend">
                     <span><i class="dot" style="background:#2563eb;"></i>สมการที่ 1</span>
                     <span><i class="dot" style="background:#dc2626;"></i>สมการที่ 2</span>
-                    <span><i class="dot" style="background:#16a34a;"></i>จุดตัดคำตอบ (x, y)</span>
+                    <span><i class="dot" style="background:#f59e0b;"></i>จุดที่นักเรียนทดสอบ</span>
+                    <span><i class="dot" style="background:#16a34a;"></i>จุดตัดคำตอบจริง</span>
                 </div>
             </div>
 
-            <!-- Right: Step by Step -->
+            <!-- Right: Hypothesis Testing & Step by Step -->
             <div class="card">
-                <h2>3. ตรวจสอบคำตอบและขั้นตอนวิธีทำ</h2>
-                <div id="summaryResult" class="result-box">คำตอบของระบบสมการคือ (4, 2)</div>
-                
-                <div class="method-tabs">
-                    <button class="m-btn active" id="btnElim" onclick="setMethod('elim')">วิธีที่ 1: การกำจัดตัวแปร</button>
-                    <button class="m-btn" id="btnSub" onclick="setMethod('sub')">วิธีที่ 2: การแทนค่า</button>
+                <h2>ขั้นที่ 2 : ทดสอบสมมติฐานคำตอบด้วยตนเอง</h2>
+                <div class="hypothesis-box">
+                    <span class="hypothesis-title">💡 ลองกรอกคำตอบ (x, y) ที่กลุ่มของนักเรียนคำนวณได้:</span>
+                    <div class="eq-row">
+                        <span>x =</span> <input type="number" id="guessX" placeholder="?" step="any">
+                        <span>y =</span> <input type="number" id="guessY" placeholder="?" step="any">
+                        <button class="btn-test" onclick="testHypothesis()">ตรวจสอบค่านี้</button>
+                    </div>
+                    <div id="testFeedback" class="test-feedback"></div>
                 </div>
 
-                <div id="stepsOutput" class="steps-container"></div>
+                <h2>ขั้นที่ 3 : ตรวจสอบขั้นตอนวิธีทำ (เฉลย)</h2>
+                <button class="btn-reveal" id="btnReveal" onclick="toggleSolution()">👁️ เปิดดูคำตอบและขั้นตอนวิธีทำ</button>
+
+                <div id="solutionPanel" class="solution-panel">
+                    <div id="summaryResult" class="result-box"></div>
+                    
+                    <div class="method-tabs">
+                        <button class="m-btn active" id="btnElim" onclick="setMethod('elim')">วิธีที่ 1: การกำจัดตัวแปร</button>
+                        <button class="m-btn" id="btnSub" onclick="setMethod('sub')">วิธีที่ 2: การแทนค่า</button>
+                    </div>
+
+                    <div id="stepsOutput" class="steps-container"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -317,19 +388,14 @@
 
 <script>
     let currentMethod = 'elim';
+    let isSolutionVisible = false;
+    let userGuess = null;
 
     function switchTab(tabId, btn) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
         document.getElementById(tabId).classList.add('active');
         btn.classList.add('active');
-    }
-
-    function setMethod(method) {
-        currentMethod = method;
-        document.getElementById('btnElim').classList.toggle('active', method === 'elim');
-        document.getElementById('btnSub').classList.toggle('active', method === 'sub');
-        calculateAll();
     }
 
     function fmtNum(n) {
@@ -341,22 +407,112 @@
         return `${fmtNum(a)}x ${sign} ${fmtNum(Math.abs(b))}y = ${fmtNum(c)}`;
     }
 
-    function calculateAll() {
-        const a1 = parseFloat(document.getElementById('a1').value) || 0;
-        const b1 = parseFloat(document.getElementById('b1').value) || 0;
-        const c1 = parseFloat(document.getElementById('c1').value) || 0;
-        const a2 = parseFloat(document.getElementById('a2').value) || 0;
-        const b2 = parseFloat(document.getElementById('b2').value) || 0;
-        const c2 = parseFloat(document.getElementById('c2').value) || 0;
+    function getParams() {
+        return {
+            a1: parseFloat(document.getElementById('a1').value) || 0,
+            b1: parseFloat(document.getElementById('b1').value) || 0,
+            c1: parseFloat(document.getElementById('c1').value) || 0,
+            a2: parseFloat(document.getElementById('a2').value) || 0,
+            b2: parseFloat(document.getElementById('b2').value) || 0,
+            c2: parseFloat(document.getElementById('c2').value) || 0
+        };
+    }
 
+    function resetDiscovery() {
+        isSolutionVisible = false;
+        userGuess = null;
+        document.getElementById('solutionPanel').style.display = 'none';
+        document.getElementById('btnReveal').textContent = '👁️ เปิดดูคำตอบและขั้นตอนวิธีทำ';
+        document.getElementById('testFeedback').style.display = 'none';
+        document.getElementById('guessX').value = '';
+        document.getElementById('guessY').value = '';
+        plotLinesOnly();
+    }
+
+    function plotLinesOnly() {
+        const { a1, b1, c1, a2, b2, c2 } = getParams();
+        const det = a1 * b2 - a2 * b1;
+        let ix = null, iy = null;
+        if (Math.abs(det) >= 1e-9) {
+            ix = (c1 * b2 - c2 * b1) / det;
+            iy = (a1 * c2 - a2 * c1) / det;
+        }
+        drawGraph(a1, b1, c1, a2, b2, c2, ix, iy, isSolutionVisible, userGuess);
+    }
+
+    function testHypothesis() {
+        const gx = parseFloat(document.getElementById('guessX').value);
+        const gy = parseFloat(document.getElementById('guessY').value);
+        const fb = document.getElementById('testFeedback');
+
+        if (isNaN(gx) || isNaN(gy)) {
+            fb.style.display = 'block';
+            fb.style.background = '#fef2f2';
+            fb.style.color = '#991b1b';
+            fb.innerHTML = '⚠️ กรุณากรอกตัวเลขทั้งค่า x และ y ก่อนกดตรวจสอบครับ';
+            return;
+        }
+
+        const { a1, b1, c1, a2, b2, c2 } = getParams();
+        const lhs1 = a1 * gx + b1 * gy;
+        const lhs2 = a2 * gx + b2 * gy;
+
+        const ok1 = Math.abs(lhs1 - c1) < 1e-6;
+        const ok2 = Math.abs(lhs2 - c2) < 1e-6;
+
+        userGuess = { x: gx, y: gy };
+        fb.style.display = 'block';
+
+        let msg = `<strong>ผลการแทนค่า (${fmtNum(gx)}, ${fmtNum(gy)}) ลงในสมการ:</strong><br>`;
+        msg += `• สมการที่ 1: ${fmtNum(a1)}(${fmtNum(gx)}) + ${fmtNum(b1)}(${fmtNum(gy)}) = <strong>${fmtNum(lhs1)}</strong> (เป้าหมายคือ ${fmtNum(c1)}) $\rightarrow$ ${ok1 ? '<span style="color:#16a34a;font-weight:bold;">✅ เป็นจริง</span>' : '<span style="color:#dc2626;font-weight:bold;">❌ ยังไม่ตรง</span>'}<br>`;
+        msg += `• สมการที่ 2: ${fmtNum(a2)}(${fmtNum(gx)}) + ${fmtNum(b2)}(${fmtNum(gy)}) = <strong>${fmtNum(lhs2)}</strong> (เป้าหมายคือ ${fmtNum(c2)}) $\rightarrow$ ${ok2 ? '<span style="color:#16a34a;font-weight:bold;">✅ เป็นจริง</span>' : '<span style="color:#dc2626;font-weight:bold;">❌ ยังไม่ตรง</span>'}<br>`;
+
+        if (ok1 && ok2) {
+            fb.style.background = '#f0fdf4';
+            fb.style.border = '1px solid #86efac';
+            fb.style.color = '#14532d';
+            msg += `<br>🎉 <strong>ยอดเยี่ยมมาก!</strong> คู่อันดับ (${fmtNum(gx)}, ${fmtNum(gy)}) ทำให้สมการเป็นจริงทั้งคู่ และอยู่ตรงจุดตัดของกราฟพอดี!`;
+        } else {
+            fb.style.background = '#fef2f2';
+            fb.style.border = '1px solid #fecaca';
+            fb.style.color = '#7f1d1d';
+            msg += `<br>🔍 <strong>สังเกตจุดสีส้มบนกราฟ:</strong> จุดที่นักเรียนทดสอบยังไม่ทับจุดตัดของเส้นตรง ลองตรวจสอบการคำนวณใหม่อีกครั้งครับ`;
+        }
+
+        fb.innerHTML = msg;
+        plotLinesOnly();
+    }
+
+    function toggleSolution() {
+        isSolutionVisible = !isSolutionVisible;
+        const panel = document.getElementById('solutionPanel');
+        const btn = document.getElementById('btnReveal');
+        if (isSolutionVisible) {
+            panel.style.display = 'block';
+            btn.textContent = '🙈 ซ่อนคำตอบและขั้นตอนวิธีทำ';
+            calculateSteps();
+        } else {
+            panel.style.display = 'none';
+            btn.textContent = '👁️ เปิดดูคำตอบและขั้นตอนวิธีทำ';
+        }
+        plotLinesOnly();
+    }
+
+    function setMethod(method) {
+        currentMethod = method;
+        document.getElementById('btnElim').classList.toggle('active', method === 'elim');
+        document.getElementById('btnSub').classList.toggle('active', method === 'sub');
+        calculateSteps();
+    }
+
+    function calculateSteps() {
+        const { a1, b1, c1, a2, b2, c2 } = getParams();
         const det = a1 * b2 - a2 * b1;
         const summaryEl = document.getElementById('summaryResult');
         const stepsEl = document.getElementById('stepsOutput');
 
         if ((a1 === 0 && b1 === 0) || (a2 === 0 && b2 === 0)) {
             summaryEl.innerHTML = "กรุณากรอกสัมประสิทธิ์หน้า x หรือ y อย่างน้อย 1 ตัวที่ไม่ใช่ 0";
-            summaryEl.style.background = "#fef2f2";
-            summaryEl.style.color = "#991b1b";
             stepsEl.textContent = "สมการไม่สมบูรณ์";
             return;
         }
@@ -367,21 +523,20 @@
                 summaryEl.innerHTML = "กราฟทับกันสนิท : มีคำตอบมากมายนับไม่ถ้วน";
                 summaryEl.style.background = "#fefce8";
                 summaryEl.style.color = "#854d0e";
-                stepsEl.textContent = `สมการที่ (1): ${formatEq(a1, b1, c1)}\nสมการที่ (2): ${formatEq(a2, b2, c2)}\n\nเมื่อจัดรูปแล้วพบว่าทั้งสองสมการเป็นสมการเดียวกัน กราฟเส้นตรงจึงทับกันสนิท ทำให้มีคำตอบมากมายนับไม่ถ้วน`;
+                stepsEl.textContent = `สมการที่ (1): ${formatEq(a1, b1, c1)}\nสมการที่ (2): ${formatEq(a2, b2, c2)}\n\nทั้งสองสมการเป็นสมการเดียวกัน กราฟเส้นตรงจึงทับกันสนิท ทำให้มีคำตอบมากมายนับไม่ถ้วน`;
             } else {
                 summaryEl.innerHTML = "กราฟขนานกัน : ไม่มีคำตอบของระบบสมการ";
                 summaryEl.style.background = "#fef2f2";
                 summaryEl.style.color = "#991b1b";
-                stepsEl.textContent = `สมการที่ (1): ${formatEq(a1, b1, c1)}\nสมการที่ (2): ${formatEq(a2, b2, c2)}\n\nความชันของเส้นตรงทั้งสองเท่ากันแต่จุดตัดแกนต่างกัน กราฟจึงขนานกันและไม่ตัดกัน ทำให้ระบบสมการนี้ไม่มีคำตอบ`;
+                stepsEl.textContent = `สมการที่ (1): ${formatEq(a1, b1, c1)}\nสมการที่ (2): ${formatEq(a2, b2, c2)}\n\nความชันเท่ากันแต่จุดตัดแกนต่างกัน กราฟจึงขนานกันและไม่ตัดกัน ทำให้ระบบสมการนี้ไม่มีคำตอบ`;
             }
-            drawGraph(a1, b1, c1, a2, b2, c2, null, null);
             return;
         }
 
         const x = (c1 * b2 - c2 * b1) / det;
         const y = (a1 * c2 - a2 * c1) / det;
 
-        summaryEl.innerHTML = `กราฟตัดกัน 1 จุด : คำตอบคือ (${fmtNum(x)}, ${fmtNum(y)})`;
+        summaryEl.innerHTML = `กราฟตัดกัน 1 จุด : คำตอบที่ถูกต้องคือ (${fmtNum(x)}, ${fmtNum(y)})`;
         summaryEl.style.background = "#f0fdf4";
         summaryEl.style.color = "#166534";
 
@@ -415,11 +570,9 @@
             }
             stepsEl.textContent = subText;
         }
-
-        drawGraph(a1, b1, c1, a2, b2, c2, x, y);
     }
 
-    function drawGraph(a1, b1, c1, a2, b2, c2, ix, iy) {
+    function drawGraph(a1, b1, c1, a2, b2, c2, ix, iy, showAnswerPoint, guess) {
         const canvas = document.getElementById('graphCanvas');
         const ctx = canvas.getContext('2d');
         const w = canvas.width;
@@ -428,7 +581,14 @@
 
         let cx = (ix !== null && isFinite(ix)) ? ix : 0;
         let cy = (iy !== null && isFinite(iy)) ? iy : 0;
+        if (guess) {
+            cx = (cx + guess.x) / 2;
+            cy = (cy + guess.y) / 2;
+        }
         let range = Math.max(10, Math.abs(cx) * 1.8, Math.abs(cy) * 1.8);
+        if (guess) {
+            range = Math.max(range, Math.abs(guess.x - cx) * 2.2, Math.abs(guess.y - cy) * 2.2);
+        }
         range = Math.ceil(range / 5) * 5;
 
         const scaleX = w / (2 * range);
@@ -436,6 +596,7 @@
         const originX = w / 2 - cx * scaleX;
         const originY = h / 2 + cy * scaleY;
 
+        // Grid
         ctx.strokeStyle = '#e2e8f0';
         ctx.lineWidth = 1;
         let step = range <= 10 ? 1 : Math.ceil(range / 10);
@@ -448,6 +609,7 @@
             ctx.beginPath(); ctx.moveTo(0, py); ctx.lineTo(w, py); ctx.stroke();
         }
 
+        // Axes
         ctx.strokeStyle = '#64748b';
         ctx.lineWidth = 2;
         if (originY >= 0 && originY <= h) {
@@ -479,7 +641,25 @@
         plotLine(a1, b1, c1, '#2563eb');
         plotLine(a2, b2, c2, '#dc2626');
 
-        if (ix !== null && iy !== null && isFinite(ix) && isFinite(iy)) {
+        // User Guess Point (Orange)
+        if (guess) {
+            let gpx = originX + guess.x * scaleX;
+            let gpy = originY - guess.y * scaleY;
+            ctx.fillStyle = '#f59e0b';
+            ctx.beginPath();
+            ctx.arc(gpx, gpy, 6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            ctx.fillStyle = '#b45309';
+            ctx.font = 'bold 12px Prompt';
+            ctx.fillText(`ทดสอบ (${fmtNum(guess.x)}, ${fmtNum(guess.y)})`, gpx + 8, gpy + 15);
+        }
+
+        // True Intersection Point (Green - shown only when revealed)
+        if (showAnswerPoint && ix !== null && iy !== null && isFinite(ix) && isFinite(iy)) {
             let px = originX + ix * scaleX;
             let py = originY - iy * scaleY;
             ctx.fillStyle = '#16a34a';
@@ -490,13 +670,13 @@
             ctx.lineWidth = 2;
             ctx.stroke();
 
-            ctx.fillStyle = '#0f172a';
+            ctx.fillStyle = '#14532d';
             ctx.font = 'bold 13px Prompt';
-            ctx.fillText(`(${fmtNum(ix)}, ${fmtNum(iy)})`, px + 10, py - 10);
+            ctx.fillText(`คำตอบ (${fmtNum(ix)}, ${fmtNum(iy)})`, px + 8, py - 10);
         }
     }
 
-    window.onload = calculateAll;
+    window.onload = plotLinesOnly;
 </script>
 </body>
 </html>
