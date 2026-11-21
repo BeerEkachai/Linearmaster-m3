@@ -208,16 +208,17 @@
         .btn-reveal:hover { background: #334155; }
 
         .solution-panel { display: none; }
-        .method-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+        .method-tabs { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
         .m-btn {
             flex: 1;
-            padding: 8px;
+            min-width: 110px;
+            padding: 8px 6px;
             border: 1px solid var(--border);
             background: #f8fafc;
             border-radius: 6px;
             cursor: pointer;
             font-weight: 600;
-            font-size: 0.88rem;
+            font-size: 0.84rem;
         }
         .m-btn.active { background: #dbeafe; border-color: #2563eb; color: #1e3a8a; }
 
@@ -236,7 +237,7 @@
             padding: 15px;
             border-radius: 8px;
             font-size: 0.9rem;
-            line-height: 1.7;
+            line-height: 1.75;
             white-space: pre-line;
             border: 1px solid #e2e8f0;
         }
@@ -332,8 +333,9 @@
                     <div id="summaryResult" class="result-box"></div>
                     
                     <div class="method-tabs">
-                        <button class="m-btn active" id="btnElim" onclick="setMethod('elim')">วิธีที่ 1: การกำจัดตัวแปร</button>
-                        <button class="m-btn" id="btnSub" onclick="setMethod('sub')">วิธีที่ 2: การแทนค่า</button>
+                        <button class="m-btn active" id="btnElimY" onclick="setMethod('elimY')">กำจัดตัวแปร y</button>
+                        <button class="m-btn" id="btnElimX" onclick="setMethod('elimX')">กำจัดตัวแปร x</button>
+                        <button class="m-btn" id="btnSub" onclick="setMethod('sub')">วิธีการแทนค่า</button>
                     </div>
 
                     <div id="stepsOutput" class="steps-container"></div>
@@ -387,7 +389,7 @@
 </footer>
 
 <script>
-    let currentMethod = 'elim';
+    let currentMethod = 'elimY';
     let isSolutionVisible = false;
     let userGuess = null;
 
@@ -399,12 +401,32 @@
     }
 
     function fmtNum(n) {
+        if (Math.abs(n) < 1e-9) return 0;
         return Number.isInteger(n) ? n : parseFloat(n.toFixed(2));
     }
 
     function formatEq(a, b, c) {
         let sign = b >= 0 ? '+' : '-';
         return `${fmtNum(a)}x ${sign} ${fmtNum(Math.abs(b))}y = ${fmtNum(c)}`;
+    }
+
+    function gcd(a, b) {
+        a = Math.abs(Math.round(a));
+        b = Math.abs(Math.round(b));
+        while (b) {
+            let t = b;
+            b = a % b;
+            a = t;
+        }
+        return a;
+    }
+
+    function getMultipliers(c1, c2) {
+        if (Number.isInteger(c1) && Number.isInteger(c2) && c1 !== 0 && c2 !== 0) {
+            let lcmVal = Math.abs(c1 * c2) / gcd(c1, c2);
+            return { m1: lcmVal / Math.abs(c1), m2: lcmVal / Math.abs(c2) };
+        }
+        return { m1: Math.abs(c2), m2: Math.abs(c1) };
     }
 
     function getParams() {
@@ -464,8 +486,8 @@
         fb.style.display = 'block';
 
         let msg = `<strong>ผลการแทนค่า (${fmtNum(gx)}, ${fmtNum(gy)}) ลงในสมการ:</strong><br>`;
-        msg += `• สมการที่ 1: ${fmtNum(a1)}(${fmtNum(gx)}) + ${fmtNum(b1)}(${fmtNum(gy)}) = <strong>${fmtNum(lhs1)}</strong> (เป้าหมายคือ ${fmtNum(c1)}) $\rightarrow$ ${ok1 ? '<span style="color:#16a34a;font-weight:bold;">✅ เป็นจริง</span>' : '<span style="color:#dc2626;font-weight:bold;">❌ ยังไม่ตรง</span>'}<br>`;
-        msg += `• สมการที่ 2: ${fmtNum(a2)}(${fmtNum(gx)}) + ${fmtNum(b2)}(${fmtNum(gy)}) = <strong>${fmtNum(lhs2)}</strong> (เป้าหมายคือ ${fmtNum(c2)}) $\rightarrow$ ${ok2 ? '<span style="color:#16a34a;font-weight:bold;">✅ เป็นจริง</span>' : '<span style="color:#dc2626;font-weight:bold;">❌ ยังไม่ตรง</span>'}<br>`;
+        msg += `• สมการที่ 1: ${fmtNum(a1)}(${fmtNum(gx)}) + ${fmtNum(b1)}(${fmtNum(gy)}) = <strong>${fmtNum(lhs1)}</strong> (เป้าหมายคือ ${fmtNum(c1)}) → ${ok1 ? '<span style="color:#16a34a;font-weight:bold;">✅ เป็นจริง</span>' : '<span style="color:#dc2626;font-weight:bold;">❌ ยังไม่ตรง</span>'}<br>`;
+        msg += `• สมการที่ 2: ${fmtNum(a2)}(${fmtNum(gx)}) + ${fmtNum(b2)}(${fmtNum(gy)}) = <strong>${fmtNum(lhs2)}</strong> (เป้าหมายคือ ${fmtNum(c2)}) → ${ok2 ? '<span style="color:#16a34a;font-weight:bold;">✅ เป็นจริง</span>' : '<span style="color:#dc2626;font-weight:bold;">❌ ยังไม่ตรง</span>'}<br>`;
 
         if (ok1 && ok2) {
             fb.style.background = '#f0fdf4';
@@ -500,9 +522,82 @@
 
     function setMethod(method) {
         currentMethod = method;
-        document.getElementById('btnElim').classList.toggle('active', method === 'elim');
+        document.getElementById('btnElimY').classList.toggle('active', method === 'elimY');
+        document.getElementById('btnElimX').classList.toggle('active', method === 'elimX');
         document.getElementById('btnSub').classList.toggle('active', method === 'sub');
         calculateSteps();
+    }
+
+    function buildEliminationSteps(targetVar, a1, b1, c1, a2, b2, c2, x, y) {
+        let text = `กำหนดให้:\n  ${formatEq(a1, b1, c1)}   --- (1)\n  ${formatEq(a2, b2, c2)}   --- (2)\n\n`;
+        
+        let coef1 = (targetVar === 'y') ? b1 : a1;
+        let coef2 = (targetVar === 'y') ? b2 : a2;
+        let remainVar = (targetVar === 'y') ? 'x' : 'y';
+        let solvedVal = (targetVar === 'y') ? x : y;
+        let otherVal = (targetVar === 'y') ? y : x;
+
+        if (coef1 === 0 || coef2 === 0) {
+            text += `เนื่องจากสัมประสิทธิ์หน้า ${targetVar} ในสมการหนึ่งเป็น 0 อยู่แล้ว จึงสามารถแก้หาค่า ${targetVar} ได้ทันที:\n`;
+            text += `  จะได้ ${targetVar} = ${fmtNum(otherVal)} และนำไปแทนค่าเพื่อหา ${remainVar} = ${fmtNum(solvedVal)}\n`;
+            text += `\nดังนั้น คำตอบของระบบสมการคือ (${fmtNum(x)}, ${fmtNum(y)})`;
+            return text;
+        }
+
+        let { m1, m2 } = getMultipliers(coef1, coef2);
+        let na1 = a1 * m1, nb1 = b1 * m1, nc1 = c1 * m1;
+        let na2 = a2 * m2, nb2 = b2 * m2, nc2 = c2 * m2;
+        let eqName1 = "(1)", eqName2 = "(2)";
+
+        if (m1 === 1 && m2 === 1) {
+            text += `ขั้นที่ 1: สังเกตสัมประสิทธิ์หน้าตัวแปร ${targetVar}\n`;
+            text += `  ขนาดของสัมประสิทธิ์หน้า ${targetVar} เท่ากันอยู่แล้ว (คือ ${fmtNum(Math.abs(coef1))}) ไม่ต้องคูณเลขเพิ่ม\n\n`;
+        } else {
+            text += `ขั้นที่ 1: ทำขนาดของสัมประสิทธิ์หน้าตัวแปร ${targetVar} ให้เท่ากัน\n`;
+            if (m1 !== 1) {
+                eqName1 = "(3)";
+                text += `  นำ ${fmtNum(m1)} คูณสมการ (1): ${formatEq(na1, nb1, nc1)}   --- (3)\n`;
+            }
+            if (m2 !== 1) {
+                eqName2 = (m1 !== 1) ? "(4)" : "(3)";
+                text += `  นำ ${fmtNum(m2)} คูณสมการ (2): ${formatEq(na2, nb2, nc2)}   --- ${eqName2}\n`;
+            }
+            text += `\n`;
+        }
+
+        let newCoef1 = (targetVar === 'y') ? nb1 : na1;
+        let newCoef2 = (targetVar === 'y') ? nb2 : na2;
+        let sameSign = (newCoef1 * newCoef2) > 0;
+
+        if (sameSign) {
+            let remCoef = (targetVar === 'y') ? (na1 - na2) : (nb1 - nb2);
+            let remConst = nc1 - nc2;
+            text += `ขั้นที่ 2: กำจัดตัวแปร ${targetVar} (เครื่องหมายเหมือนกัน ให้นำสมการมาลบกัน)\n`;
+            text += `  นำสมการ ${eqName1} ลบด้วยสมการ ${eqName2}:\n`;
+            text += `  ${fmtNum(remCoef)}${remainVar} = ${fmtNum(remConst)}\n`;
+            text += `  ${remainVar} = ${fmtNum(remConst)} / ${fmtNum(remCoef)} = ${fmtNum(solvedVal)}\n\n`;
+        } else {
+            let remCoef = (targetVar === 'y') ? (na1 + na2) : (nb1 + nb2);
+            let remConst = nc1 + nc2;
+            text += `ขั้นที่ 2: กำจัดตัวแปร ${targetVar} (เครื่องหมายต่างกัน ให้นำสมการมาบวกกัน)\n`;
+            text += `  นำสมการ ${eqName1} บวกกับสมการ ${eqName2}:\n`;
+            text += `  ${fmtNum(remCoef)}${remainVar} = ${fmtNum(remConst)}\n`;
+            text += `  ${remainVar} = ${fmtNum(remConst)} / ${fmtNum(remCoef)} = ${fmtNum(solvedVal)}\n\n`;
+        }
+
+        text += `ขั้นที่ 3: นำค่า ${remainVar} = ${fmtNum(solvedVal)} ไปแทนในสมการ (1) เพื่อหาค่า ${targetVar}\n`;
+        if (remainVar === 'x') {
+            text += `  ${fmtNum(a1)}(${fmtNum(x)}) + ${fmtNum(b1)}y = ${fmtNum(c1)}\n`;
+            text += `  ${fmtNum(a1*x)} + ${fmtNum(b1)}y = ${fmtNum(c1)}\n`;
+            text += `  ${fmtNum(b1)}y = ${fmtNum(c1 - a1*x)}  →  y = ${fmtNum(y)}\n\n`;
+        } else {
+            text += `  ${fmtNum(a1)}x + ${fmtNum(b1)}(${fmtNum(y)}) = ${fmtNum(c1)}\n`;
+            text += `  ${fmtNum(a1)}x + ${fmtNum(b1*y)} = ${fmtNum(c1)}\n`;
+            text += `  ${fmtNum(a1)}x = ${fmtNum(c1 - b1*y)}  →  x = ${fmtNum(x)}\n\n`;
+        }
+
+        text += `ดังนั้น คำตอบของระบบสมการคือ (${fmtNum(x)}, ${fmtNum(y)})`;
+        return text;
     }
 
     function calculateSteps() {
@@ -540,25 +635,10 @@
         summaryEl.style.background = "#f0fdf4";
         summaryEl.style.color = "#166534";
 
-        if (currentMethod === 'elim') {
-            stepsEl.textContent = 
-`กำหนดให้:
-  ${formatEq(a1, b1, c1)}   --- (1)
-  ${formatEq(a2, b2, c2)}   --- (2)
-
-ขั้นที่ 1: กำจัดตัวแปร y โดยทำให้สัมประสิทธิ์หน้า y เท่ากัน
-  นำ (${fmtNum(b2)}) คูณสมการ (1): ${formatEq(a1*b2, b1*b2, c1*b2)}   --- (3)
-  นำ (${fmtNum(b1)}) คูณสมการ (2): ${formatEq(a2*b1, b2*b1, c2*b1)}   --- (4)
-
-ขั้นที่ 2: นำสมการ (3) ลบด้วยสมการ (4) เพื่อกำจัดตัวแปร y
-  (${fmtNum(a1*b2)} - ${fmtNum(a2*b1)})x = ${fmtNum(c1*b2)} - ${fmtNum(c2*b1)}
-  ${fmtNum(det)}x = ${fmtNum(c1*b2 - c2*b1)}
-  x = ${fmtNum(x)}
-
-ขั้นที่ 3: นำค่า x = ${fmtNum(x)} ไปแทนในสมการเพื่อหาค่า y
-  จะได้ y = ${fmtNum(y)}
-
-ดังนั้น คำตอบของระบบสมการคือ (${fmtNum(x)}, ${fmtNum(y)})`;
+        if (currentMethod === 'elimY') {
+            stepsEl.textContent = buildEliminationSteps('y', a1, b1, c1, a2, b2, c2, x, y);
+        } else if (currentMethod === 'elimX') {
+            stepsEl.textContent = buildEliminationSteps('x', a1, b1, c1, a2, b2, c2, x, y);
         } else {
             let subText = `กำหนดให้:\n  ${formatEq(a1, b1, c1)}   --- (1)\n  ${formatEq(a2, b2, c2)}   --- (2)\n\n`;
             if (b1 !== 0) {
@@ -596,7 +676,6 @@
         const originX = w / 2 - cx * scaleX;
         const originY = h / 2 + cy * scaleY;
 
-        // Grid
         ctx.strokeStyle = '#e2e8f0';
         ctx.lineWidth = 1;
         let step = range <= 10 ? 1 : Math.ceil(range / 10);
@@ -609,7 +688,6 @@
             ctx.beginPath(); ctx.moveTo(0, py); ctx.lineTo(w, py); ctx.stroke();
         }
 
-        // Axes
         ctx.strokeStyle = '#64748b';
         ctx.lineWidth = 2;
         if (originY >= 0 && originY <= h) {
@@ -641,7 +719,6 @@
         plotLine(a1, b1, c1, '#2563eb');
         plotLine(a2, b2, c2, '#dc2626');
 
-        // User Guess Point (Orange)
         if (guess) {
             let gpx = originX + guess.x * scaleX;
             let gpy = originY - guess.y * scaleY;
@@ -658,7 +735,6 @@
             ctx.fillText(`ทดสอบ (${fmtNum(guess.x)}, ${fmtNum(guess.y)})`, gpx + 8, gpy + 15);
         }
 
-        // True Intersection Point (Green - shown only when revealed)
         if (showAnswerPoint && ix !== null && iy !== null && isFinite(ix) && isFinite(iy)) {
             let px = originX + ix * scaleX;
             let py = originY - iy * scaleY;
