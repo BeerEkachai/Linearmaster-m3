@@ -208,19 +208,45 @@
         .btn-reveal:hover { background: #334155; }
 
         .solution-panel { display: none; }
-        .method-tabs { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+        
+        /* Main Method Buttons */
+        .method-tabs { display: flex; gap: 8px; margin-bottom: 10px; }
         .m-btn {
             flex: 1;
-            min-width: 110px;
-            padding: 8px 6px;
-            border: 1px solid var(--border);
+            padding: 9px 10px;
+            border: 1.5px solid var(--border);
             background: #f8fafc;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .m-btn.active { background: #1e3a8a; border-color: #1e3a8a; color: #ffffff; }
+
+        /* Sub-method Buttons (Eliminate X vs Y) */
+        .sub-method-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            background: #eff6ff;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #bfdbfe;
+        }
+        .sub-btn {
+            flex: 1;
+            padding: 7px 10px;
+            border: 1px solid #93c5fd;
+            background: #ffffff;
+            color: #1e3a8a;
             border-radius: 6px;
             cursor: pointer;
             font-weight: 600;
-            font-size: 0.84rem;
+            font-size: 0.85rem;
+            transition: all 0.2s;
         }
-        .m-btn.active { background: #dbeafe; border-color: #2563eb; color: #1e3a8a; }
+        .sub-btn.active { background: #2563eb; border-color: #2563eb; color: #ffffff; }
 
         .result-box {
             background: #f0fdf4;
@@ -332,10 +358,16 @@
                 <div id="solutionPanel" class="solution-panel">
                     <div id="summaryResult" class="result-box"></div>
                     
+                    <!-- Main Method Selection -->
                     <div class="method-tabs">
-                        <button class="m-btn active" id="btnElimY" onclick="setMethod('elimY')">กำจัดตัวแปร y</button>
-                        <button class="m-btn" id="btnElimX" onclick="setMethod('elimX')">กำจัดตัวแปร x</button>
-                        <button class="m-btn" id="btnSub" onclick="setMethod('sub')">วิธีการแทนค่า</button>
+                        <button class="m-btn active" id="btnMainElim" onclick="setMainMethod('elim')">วิธีที่ 1: กำจัดตัวแปร</button>
+                        <button class="m-btn" id="btnMainSub" onclick="setMainMethod('sub')">วิธีที่ 2: การแทนค่า</button>
+                    </div>
+
+                    <!-- Sub-buttons for Elimination (X vs Y) -->
+                    <div class="sub-method-tabs" id="elimSubTabs">
+                        <button class="sub-btn active" id="btnElimX" onclick="setElimVar('x')">กำจัดตัวแปร x</button>
+                        <button class="sub-btn" id="btnElimY" onclick="setElimVar('y')">กำจัดตัวแปร y</button>
                     </div>
 
                     <div id="stepsOutput" class="steps-container"></div>
@@ -389,7 +421,8 @@
 </footer>
 
 <script>
-    let currentMethod = 'elimY';
+    let mainMethod = 'elim';
+    let elimVar = 'x';
     let isSolutionVisible = false;
     let userGuess = null;
 
@@ -520,11 +553,18 @@
         plotLinesOnly();
     }
 
-    function setMethod(method) {
-        currentMethod = method;
-        document.getElementById('btnElimY').classList.toggle('active', method === 'elimY');
-        document.getElementById('btnElimX').classList.toggle('active', method === 'elimX');
-        document.getElementById('btnSub').classList.toggle('active', method === 'sub');
+    function setMainMethod(method) {
+        mainMethod = method;
+        document.getElementById('btnMainElim').classList.toggle('active', method === 'elim');
+        document.getElementById('btnMainSub').classList.toggle('active', method === 'sub');
+        document.getElementById('elimSubTabs').style.display = (method === 'elim') ? 'flex' : 'none';
+        calculateSteps();
+    }
+
+    function setElimVar(v) {
+        elimVar = v;
+        document.getElementById('btnElimX').classList.toggle('active', v === 'x');
+        document.getElementById('btnElimY').classList.toggle('active', v === 'y');
         calculateSteps();
     }
 
@@ -635,10 +675,8 @@
         summaryEl.style.background = "#f0fdf4";
         summaryEl.style.color = "#166534";
 
-        if (currentMethod === 'elimY') {
-            stepsEl.textContent = buildEliminationSteps('y', a1, b1, c1, a2, b2, c2, x, y);
-        } else if (currentMethod === 'elimX') {
-            stepsEl.textContent = buildEliminationSteps('x', a1, b1, c1, a2, b2, c2, x, y);
+        if (mainMethod === 'elim') {
+            stepsEl.textContent = buildEliminationSteps(elimVar, a1, b1, c1, a2, b2, c2, x, y);
         } else {
             let subText = `กำหนดให้:\n  ${formatEq(a1, b1, c1)}   --- (1)\n  ${formatEq(a2, b2, c2)}   --- (2)\n\n`;
             if (b1 !== 0) {
